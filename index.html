@@ -23,54 +23,52 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      position: relative;
     }
 
     #map {
       flex-grow: 1;
-      transition: height 0.3s ease-in-out;
     }
 
     #panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
       height: 0;
-      overflow-y: auto;
+      overflow-y: hidden;
       background: white;
       border-top: 2px solid #ccc;
       transition: height 0.3s ease-in-out;
+      z-index: 1000;
     }
 
     #panel.show {
       height: 300px;
     }
 
-      #togglePanel {
-      position: relative;
-      width: 100%;
-      text-align: center;
-      padding: 10px 0;
-      background: #333;
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
-      z-index: 10;
-      border-top: 1px solid #aaa;
+    #panelContent {
+      height: 100%;
+      overflow-y: auto;
     }
 
-    #togglePanelOpen {
+    #togglePanel {
       position: fixed;
       bottom: 0;
       left: 50%;
       transform: translateX(-50%);
+      padding: 6px 12px;
       background: #333;
       color: white;
-      padding: 6px 12px;
-      border-radius: 6px 6px 0 0;
       cursor: pointer;
       z-index: 1001;
+      border-radius: 6px 6px 0 0;
       font-size: 14px;
+      transition: bottom 0.3s ease-in-out;
     }
 
-    body.panel-open #togglePanelOpen {
-      display: none;
+    body.panel-open #togglePanel {
+      bottom: 300px;
     }
 
     .panel-item {
@@ -84,7 +82,6 @@
       background-color: #f0f0f0;
     }
 
-    /* Popup transparan */
     .leaflet-popup-content-wrapper {
       background: rgba(255, 255, 255, 0.8);
       box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
@@ -102,10 +99,7 @@
       margin: 8px 12px;
     }
 
-    .leaflet-control-layers-overlays label:hover {
-      cursor: pointer;
-    }
-
+    .leaflet-control-layers-overlays label:hover,
     .leaflet-control-layers-overlays label input[type="checkbox"]:hover {
       cursor: pointer;
     }
@@ -115,13 +109,15 @@
 
 <div id="container">
   <div id="map"></div>
+
+  <!-- Tombol selalu terlihat -->
+  <div id="togglePanel">Daftar Titik</div>
+
+  <!-- Panel yang muncul saat dibuka -->
   <div id="panel">
-    <div id="togglePanel">Daftar Panel Ada Disini 2</div>
-    <!-- Daftar titik akan dimasukkan di sini melalui JS -->
+    <div id="panelContent"></div>
   </div>
 </div>
-
-<div id="togglePanelOpen">Daftar Titik</div>
 
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -149,7 +145,7 @@
     "Sebaran Titik Stad Bantam": geojsonLayer
   };
 
-  const layerControl = L.control.layers(null, overlays, { collapsed: false }).addTo(map);
+  L.control.layers(null, overlays, { collapsed: false }).addTo(map);
 
   function setupLegendClickEvents() {
     const labels = document.querySelectorAll('.leaflet-control-layers-overlays label');
@@ -175,7 +171,7 @@
 
   const panel = document.getElementById('panel');
   const togglePanel = document.getElementById('togglePanel');
-  const togglePanelOpen = document.getElementById('togglePanelOpen');
+  const panelContent = document.getElementById('panelContent');
 
   function smoothInvalidateMap(duration = 500) {
     const start = performance.now();
@@ -192,14 +188,8 @@
   }
 
   togglePanel.addEventListener('click', () => {
-    panel.classList.remove('show');
-    document.body.classList.remove('panel-open');
-    smoothInvalidateMap(500);
-  });
-
-  togglePanelOpen.addEventListener('click', () => {
-    panel.classList.add('show');
-    document.body.classList.add('panel-open');
+    panel.classList.toggle('show');
+    document.body.classList.toggle('panel-open');
     smoothInvalidateMap(500);
   });
 
@@ -268,7 +258,7 @@
             layer.closePopup();
           });
 
-          panel.appendChild(item);
+          panelContent.appendChild(item);
         }
       });
 
