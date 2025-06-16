@@ -96,6 +96,11 @@ body.panel-open #togglePanel {
           else if (name === "Sebaran Titik Stad Bantam" && clusterGroup && clusterGroup.getLayers().length > 0)
             map.fitBounds(clusterGroup.getBounds());
         }
+        togglePanel.addEventListener('click', () => {
+    panel.classList.toggle('show');
+    document.body.classList.toggle('panel-open');
+    smoothInvalidateMap(500);
+  });
       });
     });
   }
