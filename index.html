@@ -43,19 +43,18 @@
     }
 
     #togglePanel {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 6px 12px;
+  position: relative;
+  width: 100%;
+  text-align: center;
+  padding: 10px 0;
   background: #333;
   color: white;
   cursor: pointer;
-  z-index: 1001;
-  border-radius: 6px 6px 0 0;
   font-size: 14px;
-  transition: bottom 0.3s ease-in-out;
+  z-index: 10;
+  border-top: 1px solid #aaa;
 }
+
 
 body.panel-open #togglePanel {
   bottom: 300px; /* sama dengan tinggi panel */
@@ -116,12 +115,11 @@ body.panel-open #togglePanel {
 <div id="container">
   <div id="map"></div>
   
-  <!-- Tombol di luar panel -->
-  <div id="togglePanel">Daftar Titik</div>
-
   <div id="panel">
-    <!-- Daftar titik dimasukkan di sini oleh JS -->
-  </div>
+  <div id="togglePanel">Tutup Panel</div>
+  <!-- Daftar titik akan dimasukkan di sini melalui JS -->
+</div>
+
 </div>
 
 
