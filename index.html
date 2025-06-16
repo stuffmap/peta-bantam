@@ -19,8 +19,16 @@
     #panel { height: 0; overflow-y: auto; background: white; border-top: 2px solid #ccc; transition: height 0.3s ease-in-out; }
     #panel.show { height: 300px; }
     #togglePanel { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); padding: 6px 12px; background: #333; color: white; cursor: pointer; z-index: 1001; border-radius: 6px 6px 0 0; font-size: 14px; transition: bottom 0.3s ease-in-out; }
-    body.panel-open #togglePanel { bottom: 300px; }
-    #togglePanel.up { bottom: 300px; }
+    body.panel-open #togglePanel,
+#togglePanel.up {
+  bottom: calc(300px); /* tetap, atau ganti ke `height: auto` jika panelnya fleksibel */
+}
+
+/* Untuk HP atau layar kecil */
+@media (max-width: 768px) {
+  #panel.show {
+    height: 50vh; /* setengah layar, lebih fleksibel */
+  }
     #togglePanel.down { bottom: 0; }
     .panel-item { padding: 8px 12px; border-bottom: 1px solid #ddd; cursor: pointer; font-size: 13px; }
     .panel-item:hover { background-color: #f0f0f0; }
