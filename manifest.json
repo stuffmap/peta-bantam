@@ -1,0 +1,21 @@
+{
+  "name": "Peta Stad Bantam",
+  "short_name": "Banten 1725",
+  "start_url": "/peta-bantam/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#333333",
+  "description": "Petunjuk tempat-tempat utama di Banten tahun 1725",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

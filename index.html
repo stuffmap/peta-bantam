@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Peta Stad Bantam - Lengkap dengan Titik</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#333333">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; font-family: sans-serif; font-size: 13px; }
+    #container { display: flex; flex-direction: column; height: 100vh; }
+    #map { flex-grow: 1; transition: height 0.3s ease-in-out; }
+    #panel { height: 0; overflow-y: auto; background: white; border-top: 2px solid #ccc; transition: height 0.3s ease-in-out; }
+    #panel.show { height: 300px; }
+    #togglePanel { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); padding: 6px 12px; background: #333; color: white; cursor: pointer; z-index: 1001; border-radius: 6px 6px 0 0; font-size: 14px; transition: bottom 0.3s ease-in-out; }
+    body.panel-open #togglePanel { bottom: 300px; }
+    #togglePanel.up { bottom: 300px; }
+    #togglePanel.down { bottom: 0; }
+    .panel-item { padding: 8px 12px; border-bottom: 1px solid #ddd; cursor: pointer; font-size: 13px; }
+    .panel-item:hover { background-color: #f0f0f0; }
+    .leaflet-popup-content-wrapper { background: rgba(255, 255, 255, 0.8); box-shadow: 0 0 8px rgba(0, 0, 0, 0.3); border-radius: 8px; backdrop-filter: blur(4px); }
+    .leaflet-popup-tip { background: rgba(255, 255, 255, 0.8); }
+    .leaflet-popup-content { font-size: 13px; color: #333; margin: 8px 12px; }
+    .leaflet-control-layers-overlays label:hover { cursor: pointer; }
+    .leaflet-control-layers-overlays label input[type="checkbox"]:hover { cursor: pointer; }
+  </style>
+</head>
+<body>
+<div id="container">
+  <div id="map"></div>
+  <div id="panel"></div>
+</div>
+<div id="togglePanel" class="down">Daftar Titik</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<script>
+  const map = L.map('map', { center: [-6.0385, 106.1565], zoom: 16, minZoom: 2, maxZoom: 22 });
+  const imageBounds = [[-6.046033820, 106.147378580], [-6.031004791, 106.165673327]];
+  const bantamOverlay = L.imageOverlay('stad_bantam_map.png', imageBounds, { opacity: 0.8, interactive: true }).addTo(map);
+  const geojsonLayer = L.layerGroup();
+  let clusterGroup = null;
+  const overlays = { "Stad Bantam Map": bantamOverlay, "Sebaran Titik Stad Bantam": geojsonLayer };
+  const layerControl = L.control.layers(null, overlays, { collapsed: false }).addTo(map);
+
+  function setupLegendClickEvents() {
+    const labels = document.querySelectorAll('.leaflet-control-layers-overlays label');
+    labels.forEach(label => {
+      const checkbox = label.querySelector('input');
+      const name = label.textContent.trim();
+      label.addEventListener('click', function (e) {
+        if (e.target !== checkbox) {
+          e.preventDefault();
+          if (name === "Stad Bantam Map") map.fitBounds(imageBounds);
+          else if (name === "Sebaran Titik Stad Bantam" && clusterGroup && clusterGroup.getLayers().length > 0)
+            map.fitBounds(clusterGroup.getBounds());
+        }
+      });
+    });
+  }
+  setTimeout(setupLegendClickEvents, 500);
+  const panel = document.getElementById('panel');
+  const togglePanel = document.getElementById('togglePanel');
+  function smoothInvalidateMap(duration = 500) {
+    const start = performance.now();
+    function animate(time) {
+      const elapsed = time - start;
+      map.invalidateSize();
+      if (elapsed < duration) requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  }
+  togglePanel.addEventListener('click', () => {
+    panel.classList.toggle('show');
+    document.body.classList.toggle('panel-open');
+    smoothInvalidateMap(500);
+  });
+  const redIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', shadowSize: [41, 41]
+  });
+  const blueIcon = L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34],
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', shadowSize: [41, 41]
+  });
+  fetch('stad_bantam_points.geojson')
+    .then(response => response.json())
+    .then(data => {
+      geojsonLayer.clearLayers();
+      clusterGroup = L.markerClusterGroup();
+      const loadedPoints = L.geoJSON(data, {
+        pointToLayer: function (feature, latlng) {
+          const popupContent = feature.properties?.Keterangan
+            ? `<b>Keterangan</b><br>${feature.properties.Keterangan}` : 'Tanpa keterangan';
+          const marker = L.marker(latlng, { icon: blueIcon });
+          marker.bindPopup(popupContent);
+          marker.on('mouseover', () => marker.setIcon(redIcon));
+          marker.on('mouseout', () => { marker.setIcon(blueIcon); marker.closePopup(); });
+          return marker;
+        },
+        onEachFeature: function (feature, layer) {
+          const item = document.createElement('div');
+          item.className = 'panel-item';
+          item.textContent = feature.properties?.Keterangan || 'Titik tanpa keterangan';
+          item.addEventListener('click', () => {
+            map.setView(layer.getLatLng(), 19);
+            layer.openPopup();
+          });
+          item.addEventListener('mouseover', () => { layer.setZIndexOffset(1000); layer.setIcon(redIcon); });
+          item.addEventListener('mouseout', () => { layer.setZIndexOffset(0); layer.setIcon(blueIcon); layer.closePopup(); });
+          panel.appendChild(item);
+        }
+      });
+      clusterGroup.addLayer(loadedPoints);
+      geojsonLayer.addLayer(clusterGroup);
+      geojsonLayer.addTo(map);
+      setTimeout(setupLegendClickEvents, 500);
+    });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(reg => console.log('Service Worker registered!', reg))
+        .catch(err => console.error('Service Worker registration failed:', err));
+    });
+  }
+</script>
+</body>
+</html>
